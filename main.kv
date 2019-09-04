@@ -4,17 +4,73 @@
 
 <Container>:
     display: display
-    orientation: "vertical"
+    orientation: "horizontal"
+
     BoxLayout:
-        orientation: "horizontal"
+        orientation: "vertical"    
         LabelDraw:
-            size_hint: 0.5,1.0
+            size_hint: 1.0,1.0
             id: display
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: 1.0,1.0
+            ClrButton:
+                size_hint: 1.0,1.0
+                on_release: display.clear_canvas(display)
+            
+            SaveButton:
+                size_hint: 1.0,1.0
+                on_release: display.save_canvas(display)
+
+            ClassifyButton: 
+                size_hint: 1.0,1.0
+                #on_realease are Run in reverse order to declaration (obvs...)
+                on_release: imageInput.reload() 
+                on_release: imagePlt.reload()
+                on_release: self.classify_image()
+
+            SaliencyButton:
+                size_hint: 1.0,1.0
+                on_release: imageSaliency.reload()    
+                on_release: self.saliency_image()
+
+    BoxLayout:
+        orientation: "vertical"
+        Image:
+            id: imageInput
+            nocache: True 
+            size_hint: 1.0,0.5
+            source: 'cnnInput.png'
+            size: self.texture_size
+            bcolor: 0.2,0.7,0.2,1.0
+            canvas.before:
+                Color:
+                    rgba: self.bcolor
+                Rectangle:
+                    pos: self.pos
+                    size: self.size         
         Image:
             id: imagePlt
             nocache: True 
-            size_hint: 0.5,1.0
+            size_hint: 1.0,0.5
             source: 'classified.png'
+            size: self.texture_size
+            bcolor: 0.2,0.7,0.2,1.0
+            canvas.before:
+                Color:
+                    rgba: self.bcolor
+                Rectangle:
+                    pos: self.pos
+                    size: self.size           
+
+    BoxLayout:
+        orientation: "vertical"
+
+        Image:
+            id: imageSaliency
+            nocache: True 
+            size_hint: 1.0,0.5
+            source: 'saliency.png'
             size: self.texture_size
             bcolor: 0.2,0.7,0.2,1.0
             canvas.before:
@@ -24,16 +80,6 @@
                     pos: self.pos
                     size: self.size
 
-    BoxLayout:
-        orientation: "horizontal"
-        size_hint: 1.0,0.25
-        ClrButton:
-            on_release: display.clear_canvas(display)
-        
-        SaveButton:
-            on_release: display.save_canvas(display)
-
-        ClassifyButton: #Run in reverse order to declaration (obvs...)
-            on_release: imagePlt.reload()
-            on_release: self.classify_image()
-           
+        Label:
+            size_hint: 1.0,0.5
+            id: placeHolder
