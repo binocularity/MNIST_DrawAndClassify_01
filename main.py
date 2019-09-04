@@ -45,7 +45,7 @@ from os import listdir
 import matplotlib.cm as cm
 
 
-#Disabling developer warning messages.
+#Disable developer warning messages.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -62,15 +62,41 @@ plt.figure(figsize=(10,10))
 
 Builder.load_file("buttons.kv")
 
-# Utility to plot saliency
-def plot_map(grads, img):
-    fig, axes = plt.subplots(1,2,figsize=(14,5))
-    axes[0].imshow(img)
-    axes[1].imshow(img)
-    i = axes[1].imshow(grads,cmap="jet",alpha=0.8)
-    fig.colorbar(i)
-    plt.suptitle("Saliency plot")
-    plt.show()
+#
+# Prepare CNN'a
+# By chance model 00 and model 01 the final layer have the same name: dense_2
+#
+num_of_models = 2
+global_model=[None]*num_of_models
+global_saliency=[None]*num_of_models
+glb_indx = 0
+print("")
+print(">>>>>>>>>")
+print("Model 00 loading")
+print("")
+global_model[0] = load_model('MNIST_model_00.h5')
+global_saliency[0] = load_model('MNIST_model_00.h5')
+layer_idx = utils.find_layer_idx(global_saliency[0], 'dense_2')
+# Swap softmax with linear
+global_saliency[0].layers[layer_idx].activation = keras.activations.linear
+global_saliency[0] = utils.apply_modifications(global_saliency[0])
+
+print("")
+print(">>>>>>>>>")
+print("Model 01 loading")
+print("")
+global_model[1] = load_model('MNIST_model_01.h5')
+global_saliency[1] = load_model('MNIST_model_01.h5')
+layer_idx = utils.find_layer_idx(global_saliency[1], 'dense_2')
+# Swap softmax with linear
+global_saliency[1].layers[layer_idx].activation = keras.activations.linear
+global_saliency[1] = utils.apply_modifications(global_saliency[1])
+
+print("")
+print("Models loaded")
+print("<<<<<<<<<")
+print("")
+
 
 class Container(BoxLayout):
     display = ObjectProperty()
@@ -97,18 +123,34 @@ class ClrButton(Button):
 class SaveButton(Button):
     pass
 
+class Model00Button(Button):
+    pass
+
+class Model01Button(Button):
+    pass
+
+
 class SaliencyButton(Button):
     def __init__(self, **kwargs):
         super(Button, self).__init__(**kwargs)
-        self.model = load_model('MNIST_model.h5')
+        self.model = global_saliency[glb_indx]
 
         print("")
         print(">>>>>>>>>")
         print("Saliency model loaded")
         print("")
         
+    def setModel( self, num ):
+        global glb_indx
+
+        glb_indx = num
+        self.model = global_saliency[glb_indx]
+        print( "Saliency model index is now: " + str(glb_indx) )
+
 
     def saliency_image(self):
+        global glb_indx
+
         layer_outputs = [layer.output for layer in self.model.layers]
         activation_model = Model(inputs=self.model.input, outputs=layer_outputs)
 
@@ -121,14 +163,15 @@ class SaliencyButton(Button):
         img_data /= 255.0
 
         layer_idx = utils.find_layer_idx(self.model, 'dense_2')
-        # Swap softmax with linear
-        self.model.layers[layer_idx].activation = keras.activations.linear
-        self.model = utils.apply_modifications(self.model)
+        # Swap softmax with linear <<Done>>
+        #self.model.layers[layer_idx].activation = keras.activations.linear
+        #self.model = utils.apply_modifications(self.model)
 
         #Check we can still categorise the image.
         prediction =self.model.predict(img_data)
         prediction_category = np.argmax(prediction[0])
         print("Predicted numeral modified model: ", prediction_category)
+        print( "The prediction for saliency: "+ str(prediction.argmax() ) + " by model: " +str(glb_indx))
 
         class_idxs_sorted = np.argsort(prediction.flatten())[::-1]
         class_idx = class_idxs_sorted[0]
@@ -149,7 +192,6 @@ class SaliencyButton(Button):
         grad_eval_by_hand = derivative_fn([img_data[...]])[0]
         print(grad_eval_by_hand.shape)
 
-
         grad_eval_by_hand = np.abs(grad_eval_by_hand).max(axis=(0,3))
 
         ## normalize to range between 0 and 1
@@ -160,6 +202,8 @@ class SaliencyButton(Button):
 
         plt.figure(figsize=(10,10))
         plt.title('Saliency Map')
+        theTitle = 'Saliency Map, predicts: '+str(prediction.argmax())+ ' by model: ' + str(glb_indx)
+        plt.title(theTitle,fontsize=20 )
         plt.imshow(grad_eval_by_hand,cmap="coolwarm",alpha=0.8)
         plt.savefig('saliency.png')
         plt.close("all")
@@ -168,12 +212,7 @@ class ClassifyButton(Button):
     
     def __init__(self, **kwargs):
         super(Button, self).__init__(**kwargs)
-        self.model = load_model('MNIST_model.h5')
-
-        print("")
-        print(">>>>>>>>>")
-        print("Main model loaded")
-        print("")
+        self.model = global_model[glb_indx]
         
         # print("")
         # print(">>>>>>>>>")
@@ -186,14 +225,22 @@ class ClassifyButton(Button):
         # print("<<<<<<<<<")          
         # print("")
 
+    def setModel( self, num ):
+        global glb_indx
+
+        glb_indx = num
+        self.model = global_model[glb_indx]
+        print( "Classify model index is now: " + str(glb_indx) )
 
     def classify_image(self):
+        global glb_indx
+
         Custom_image_dir = './'
         Custom_image = "userDrawn.png"
         img = image.load_img('%s/%s' %(Custom_image_dir, Custom_image),  target_size=(28, 28), color_mode="grayscale")
 
         plt.figure(figsize=(10,10))
-        plt.title('Actual input to CNN')
+        plt.title('Actual input to CNN',fontsize=20)
         plt.imshow(img,cmap=cm.gray, vmin=0, vmax=255)
         plt.savefig('cnnInput.png')
         plt.close("all")
@@ -205,13 +252,14 @@ class ClassifyButton(Button):
         img_data /= 255.0
         #Predict custom image.
         prediction = self.model.predict(img_data)
-        print(prediction.argmax())
+        print( "The prediction is: " + str(prediction.argmax()) + " by model: " +str(glb_indx))
 
         plt.figure(figsize=(10,10))
         index = np.arange(10)
         my_cmap = cm.get_cmap('winter')
         plt.bar(index, prediction[0],color=my_cmap(prediction[0]))
-        plt.title('Predicted: %s' %np.argmax(prediction[0]))
+        theTitle = 'Predicted: ' + str(np.argmax(prediction[0])) + ' by model: ' +str(glb_indx)
+        plt.title(theTitle,fontsize=20 )
         plt.xticks(index)
         plt.yticks(np.arange(0, 1.1, step = 0.1))
         #plt.show(block=False)

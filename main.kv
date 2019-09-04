@@ -23,32 +23,45 @@
                 on_release: display.save_canvas(display)
 
             ClassifyButton: 
+                id: classify
                 size_hint: 1.0,1.0
                 #on_realease are Run in reverse order to declaration (obvs...)
-                on_release: imageInput.reload() 
                 on_release: imagePlt.reload()
                 on_release: self.classify_image()
 
             SaliencyButton:
+                id: saliency
                 size_hint: 1.0,1.0
+                on_release: imageInput.reload()
                 on_release: imageSaliency.reload()    
                 on_release: self.saliency_image()
 
+            BoxLayout:
+                orientation: "horizontal"
+                size_hint: 1.0,1.0
+                Model00Button: 
+                    size_hint: 1.0,1.0
+                    id: model00
+                    on_release: classify.setModel( 0 )
+                    on_release: saliency.setModel( 0 )
+
+                Model01Button: 
+                    size_hint: 1.0,1.0
+                    id: model01
+                    on_release: classify.setModel( 1 )
+                    on_release: saliency.setModel( 1 )                    
+
     BoxLayout:
         orientation: "vertical"
-        Image:
-            id: imageInput
-            nocache: True 
+        canvas.before:
+            Color:
+                rgba: 1,1,1,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
             size_hint: 1.0,0.5
-            source: 'cnnInput.png'
-            size: self.texture_size
-            bcolor: 0.2,0.7,0.2,1.0
-            canvas.before:
-                Color:
-                    rgba: self.bcolor
-                Rectangle:
-                    pos: self.pos
-                    size: self.size         
+            id: placeHolder    
         Image:
             id: imagePlt
             nocache: True 
@@ -67,6 +80,20 @@
         orientation: "vertical"
 
         Image:
+            id: imageInput
+            nocache: True 
+            size_hint: 1.0,0.5
+            source: 'cnnInput.png'
+            size: self.texture_size
+            bcolor: 0.2,0.7,0.2,1.0
+            canvas.before:
+                Color:
+                    rgba: self.bcolor
+                Rectangle:
+                    pos: self.pos
+                    size: self.size     
+
+        Image:
             id: imageSaliency
             nocache: True 
             size_hint: 1.0,0.5
@@ -80,6 +107,4 @@
                     pos: self.pos
                     size: self.size
 
-        Label:
-            size_hint: 1.0,0.5
-            id: placeHolder
+
