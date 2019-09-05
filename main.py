@@ -10,6 +10,9 @@
 #
 #
 
+#
+# Kivy
+#
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -22,7 +25,7 @@ from kivy.core.window import Window
 from kivy.graphics import Color, Line
 
 #
-# Tensorflow stuff.
+# Tensorflow and Keras
 #
 import tensorflow as tf
 from keras.models import load_model
@@ -43,7 +46,8 @@ import random
 import os
 from os import listdir 
 import matplotlib.cm as cm
-
+from PIL import Image, ImageFont, ImageDraw
+import shutil
 
 #Disable developer warning messages.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -52,10 +56,10 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 #
 # Zero the image for the graph so it is display blank to start with.
 # 
-import shutil
 shutil.copy("blank.png","classified.png")
 shutil.copy("blank.png","cnnInput.png")
 shutil.copy("blank.png","saliency.png")
+shutil.copy("glyphNoData_crp.png", "currentGlyph.png")
 
 # Dummy call to overcome problems with matplotlib changing the window size on first call
 plt.figure(figsize=(10,10))
@@ -97,6 +101,9 @@ print("Models loaded")
 print("<<<<<<<<<")
 print("")
 
+# Globals for current result: set current prediction to -1
+curr_prd = -1
+curr_conf = 0
 
 class Container(BoxLayout):
     display = ObjectProperty()
@@ -111,13 +118,16 @@ class LabelDraw(Label):
     def on_touch_move(self, touch):
         touch.ud['line'].points += [touch.x, touch.y]
 
-    def clear_canvas(self, obj):
+    def clear_canvas(self):
         self.canvas.clear()
 
-    def save_canvas(self,obj):
+    def save_canvas(self):
      self.export_as_image().save("userDrawn.png", flipped=False)   
 
 class ClrButton(Button):
+    pass
+
+class ClrAllButton(Button):
     pass
 
 class SaveButton(Button):
@@ -201,9 +211,8 @@ class SaliencyButton(Button):
         #grad_eval_by_hand = 1.0-(grad_eval_by_hand - arr_min) / (arr_max - arr_min + K.epsilon())
 
         plt.figure(figsize=(10,10))
-        plt.title('Saliency Map')
-        theTitle = 'Saliency Map, predicts: '+str(prediction.argmax())+ ' by model: ' + str(glb_indx)
-        plt.title(theTitle,fontsize=20 )
+        theTitle = 'Saliency predicts: '+str(prediction.argmax())+ ' by model: ' + str(glb_indx)
+        plt.title(theTitle,fontsize=32 )
         plt.imshow(grad_eval_by_hand,cmap="coolwarm",alpha=0.8)
         plt.savefig('saliency.png')
         plt.close("all")
@@ -232,15 +241,49 @@ class ClassifyButton(Button):
         self.model = global_model[glb_indx]
         print( "Classify model index is now: " + str(glb_indx) )
 
+    def generateGlyph( self ):
+        global curr_prd
+        global curr_conf
+        if (curr_prd == -1 ):
+            shutil.copy("glyphNoData_crp.png","currentGlyph.png")
+        else:
+            stemName = ['G','F','E','D','C','B','A']
+            # offset confidence so 0.3 is lowest then in steps of 0.1 upwards
+            if curr_conf < 0.3:
+                nameIndx = 0
+            else:
+                nameIndx = int(10.0*(curr_conf-0.3))
+            nameIndx = np.clip(nameIndx,0, 6)
+            filename = '.\\VisEntGlyphs\\' + stemName[nameIndx] + '_crp.png'
+            source_img = Image.open(filename).convert("RGBA")
+            draw = ImageDraw.Draw(source_img)
+            font = ImageFont.truetype("arial.ttf", 120)
+            num = str(curr_prd)
+            xD,yD=draw.textsize(num, font=font)
+            draw.text((130-(xD/2),130-(yD/2)), num, fill=(255,255,255,255), font=font )
+            source_img.save("currentGlyph.png")
+
+    def clear_classify(self):
+        global curr_prd
+        global curr_conf
+        shutil.copy("blank.png","classified.png")
+        shutil.copy("glyphNoData_crp.png", "currentGlyph.png")
+        shutil.copy("blank.png","cnnInput.png")
+        shutil.copy("blank.png","saliency.png")
+        curr_prd = -1
+        curr_conf = 0
+
     def classify_image(self):
         global glb_indx
+        global curr_prd
+        global curr_conf
 
         Custom_image_dir = './'
         Custom_image = "userDrawn.png"
         img = image.load_img('%s/%s' %(Custom_image_dir, Custom_image),  target_size=(28, 28), color_mode="grayscale")
 
         plt.figure(figsize=(10,10))
-        plt.title('Actual input to CNN',fontsize=20)
+        plt.title('Image as input to CNN',fontsize=32)
         plt.imshow(img,cmap=cm.gray, vmin=0, vmax=255)
         plt.savefig('cnnInput.png')
         plt.close("all")
@@ -254,12 +297,15 @@ class ClassifyButton(Button):
         prediction = self.model.predict(img_data)
         print( "The prediction is: " + str(prediction.argmax()) + " by model: " +str(glb_indx))
 
+        curr_prd = prediction.argmax()
+        curr_conf = prediction[0][curr_prd]
+        print( curr_prd, curr_conf,prediction[0])
         plt.figure(figsize=(10,10))
         index = np.arange(10)
         my_cmap = cm.get_cmap('winter')
         plt.bar(index, prediction[0],color=my_cmap(prediction[0]))
         theTitle = 'Predicted: ' + str(np.argmax(prediction[0])) + ' by model: ' +str(glb_indx)
-        plt.title(theTitle,fontsize=20 )
+        plt.title(theTitle,fontsize=32 )
         plt.xticks(index)
         plt.yticks(np.arange(0, 1.1, step = 0.1))
         #plt.show(block=False)
