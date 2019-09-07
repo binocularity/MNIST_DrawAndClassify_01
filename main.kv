@@ -67,7 +67,7 @@
         orientation: "vertical"
         canvas.before:
             Color:
-                rgba: 1,1,1,1
+                rgba: 0.8,0.8,0.1,1
             Rectangle:
                 size: self.size
                 pos: self.pos
@@ -75,52 +75,37 @@
             id: outcomeGlyph
             size_hint: 1.0,0.5
             nocache: True 
-            allow_stretch: True
             source: 'currentGlyph.png'
+            allow_stretch: True
 
         Image:
             id: imagePlt
             nocache: True 
             size_hint: 1.0,0.5
             source: 'classified.png'
-            size: self.texture_size
-            bcolor: 0.2,0.7,0.2,1.0
-            canvas.before:
-                Color:
-                    rgba: self.bcolor
-                Rectangle:
-                    pos: self.pos
-                    size: self.size           
+            allow_stretch: True        
 
     BoxLayout:
         orientation: "vertical"
-
+        canvas.before:
+            Color:
+                rgba: 0.1,0.8,0.1,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
         Image:
             id: imageInput
             nocache: True 
             size_hint: 1.0,0.5
             source: 'cnnInput.png'
-            size: self.texture_size
-            bcolor: 0.2,0.7,0.2,1.0
-            canvas.before:
-                Color:
-                    rgba: self.bcolor
-                Rectangle:
-                    pos: self.pos
-                    size: self.size     
+            allow_stretch: True             
 
         Image:
             id: imageSaliency
             nocache: True 
             size_hint: 1.0,0.5
             source: 'saliency.png'
-            size: self.texture_size
-            bcolor: 0.2,0.7,0.2,1.0
-            canvas.before:
-                Color:
-                    rgba: self.bcolor
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
+            allow_stretch: True
+
 
 

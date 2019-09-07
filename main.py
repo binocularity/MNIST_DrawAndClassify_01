@@ -76,7 +76,7 @@ global_saliency=[None]*num_of_models
 glb_indx = 0
 print("")
 print(">>>>>>>>>")
-print("Model 00 loading")
+print("Network 00 loading")
 print("")
 global_model[0] = load_model('MNIST_model_00.h5')
 global_saliency[0] = load_model('MNIST_model_00.h5')
@@ -87,7 +87,7 @@ global_saliency[0] = utils.apply_modifications(global_saliency[0])
 
 print("")
 print(">>>>>>>>>")
-print("Model 01 loading")
+print("Network 01 loading")
 print("")
 global_model[1] = load_model('MNIST_model_01.h5')
 global_saliency[1] = load_model('MNIST_model_01.h5')
@@ -97,7 +97,7 @@ global_saliency[1].layers[layer_idx].activation = keras.activations.linear
 global_saliency[1] = utils.apply_modifications(global_saliency[1])
 
 print("")
-print("Models loaded")
+print("Networks loaded")
 print("<<<<<<<<<")
 print("")
 
@@ -147,7 +147,7 @@ class SaliencyButton(Button):
 
         print("")
         print(">>>>>>>>>")
-        print("Saliency model loaded")
+        print("Saliency network loaded")
         print("")
         
     def setModel( self, num ):
@@ -155,7 +155,7 @@ class SaliencyButton(Button):
 
         glb_indx = num
         self.model = global_saliency[glb_indx]
-        print( "Saliency model index is now: " + str(glb_indx) )
+        print( "Saliency network index is now: " + str(glb_indx) )
 
 
     def saliency_image(self):
@@ -181,7 +181,7 @@ class SaliencyButton(Button):
         prediction =self.model.predict(img_data)
         prediction_category = np.argmax(prediction[0])
         print("Predicted numeral modified model: ", prediction_category)
-        print( "The prediction for saliency: "+ str(prediction.argmax() ) + " by model: " +str(glb_indx))
+        print( "The prediction for saliency: "+ str(prediction.argmax() ) + " by network: " +str(glb_indx))
 
         class_idxs_sorted = np.argsort(prediction.flatten())[::-1]
         class_idx = class_idxs_sorted[0]
@@ -211,7 +211,7 @@ class SaliencyButton(Button):
         #grad_eval_by_hand = 1.0-(grad_eval_by_hand - arr_min) / (arr_max - arr_min + K.epsilon())
 
         plt.figure(figsize=(10,10))
-        theTitle = 'Saliency predicts: '+str(prediction.argmax())+ ' by model: ' + str(glb_indx)
+        theTitle = 'Saliency, predicts: '+str(prediction.argmax())+ ' by network: ' + str(glb_indx)
         plt.title(theTitle,fontsize=32 )
         plt.imshow(grad_eval_by_hand,cmap="coolwarm",alpha=0.8)
         plt.savefig('saliency.png')
@@ -239,7 +239,7 @@ class ClassifyButton(Button):
 
         glb_indx = num
         self.model = global_model[glb_indx]
-        print( "Classify model index is now: " + str(glb_indx) )
+        print( "Classify network index is now: " + str(glb_indx) )
 
     def generateGlyph( self ):
         global curr_prd
@@ -254,13 +254,16 @@ class ClassifyButton(Button):
             else:
                 nameIndx = int(10.0*(curr_conf-0.3))
             nameIndx = np.clip(nameIndx,0, 6)
-            filename = '.\\VisEntGlyphs\\' + stemName[nameIndx] + '_crp.png'
+            filename = '.\\VisEntGlyphs\\' + stemName[nameIndx] + '_crp_over.png'
             source_img = Image.open(filename).convert("RGBA")
             draw = ImageDraw.Draw(source_img)
-            font = ImageFont.truetype("arial.ttf", 120)
+            font = ImageFont.truetype("arial.ttf", 240)
             num = str(curr_prd)
             xD,yD=draw.textsize(num, font=font)
-            draw.text((130-(xD/2),130-(yD/2)), num, fill=(255,255,255,255), font=font )
+            draw.text((320-(xD/2),240-(yD/2)), num, fill=(255,255,0,255), font=font )
+            font = ImageFont.truetype("arial.ttf", 32)
+            txt = "High ------------- probability ------------- Low" 
+            draw.text((20,525), txt, fill=(51,51,51,255), font=font )
             source_img.save("currentGlyph.png")
 
     def clear_classify(self):
@@ -295,7 +298,7 @@ class ClassifyButton(Button):
         img_data /= 255.0
         #Predict custom image.
         prediction = self.model.predict(img_data)
-        print( "The prediction is: " + str(prediction.argmax()) + " by model: " +str(glb_indx))
+        print( "The prediction is: " + str(prediction.argmax()) + " by network: " +str(glb_indx))
 
         curr_prd = prediction.argmax()
         curr_conf = prediction[0][curr_prd]
@@ -304,7 +307,7 @@ class ClassifyButton(Button):
         index = np.arange(10)
         my_cmap = cm.get_cmap('winter')
         plt.bar(index, prediction[0],color=my_cmap(prediction[0]))
-        theTitle = 'Predicted: ' + str(np.argmax(prediction[0])) + ' by model: ' +str(glb_indx)
+        theTitle = 'Predicted: ' + str(np.argmax(prediction[0])) + ' by network: ' +str(glb_indx)
         plt.title(theTitle,fontsize=32 )
         plt.xticks(index)
         plt.yticks(np.arange(0, 1.1, step = 0.1))
