@@ -70,7 +70,7 @@ Builder.load_file("buttons.kv")
 # Prepare CNN'a
 # By chance model 00 and model 01 the final layer have the same name: dense_2
 #
-num_of_models = 2
+num_of_models = 3
 global_model=[None]*num_of_models
 global_saliency=[None]*num_of_models
 glb_indx = 0
@@ -95,6 +95,17 @@ layer_idx = utils.find_layer_idx(global_saliency[1], 'dense_2')
 # Swap softmax with linear
 global_saliency[1].layers[layer_idx].activation = keras.activations.linear
 global_saliency[1] = utils.apply_modifications(global_saliency[1])
+
+print("")
+print(">>>>>>>>>")
+print("Network 02 loading")
+print("")
+global_model[2] = load_model('MNIST_model_04.h5')
+global_saliency[2] = load_model('MNIST_model_04.h5')
+layer_idx = utils.find_layer_idx(global_saliency[2], 'dense_2')
+# Swap softmax with linear
+global_saliency[2].layers[layer_idx].activation = keras.activations.linear
+global_saliency[2] = utils.apply_modifications(global_saliency[2])
 
 print("")
 print("Networks loaded")
@@ -138,6 +149,10 @@ class Model00Button(Button):
 
 class Model01Button(Button):
     pass
+
+class Model02Button(Button):
+    pass
+
 
 
 class SaliencyButton(Button):
