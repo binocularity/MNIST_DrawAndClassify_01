@@ -4,117 +4,181 @@
 
 <Container>:
     display: display
-    orientation: "horizontal"
 
     BoxLayout:
-        orientation: "vertical"   
+        orientation: "horizontal"    
 
-        LabelDraw:
-            size_hint: 1.0,1.0
-            id: display
-            pos_hint: {"top":0}
+
+        BoxLayout:
+            orientation: "vertical" 
+            size_hint: 0.3,1.0             
+
+            LabelDraw:
+                size_hint: 1.0,1.0
+                id: display
+                pos_hint: {"top":0}
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint: 1.0,1.0
+                BoxLayout:
+                    orientation: "horizontal"
+                    ClrButton:
+                        size_hint: 1.0,1.0
+                        on_release: display.clear_canvas()
+                    ClrAllButton:
+                        size_hint: 1.0,1.0
+                        on_release: imageInput.reload()
+                        on_release: imageSaliency.reload() 
+                        on_release: outcomeGlyph.reload()
+                        on_release: imagePlt.reload()
+                        on_release: classify.clear_classify()
+                        on_release: display.clear_canvas()
+
+                ClassifyButton: 
+                    id: classify
+                    size_hint: 1.0,1.0
+                    #on_realease are Run in reverse order to declaration (obvs...)
+                    on_release: outcomeGlyph.reload()
+                    on_release: self.generateGlyph()
+                    on_release: imagePlt.reload()
+                    on_release: self.classify_image()
+                    on_release: display.save_canvas()
+
+                SaliencyButton:
+                    id: saliency
+                    size_hint: 1.0,1.0
+                    on_release: imageInput.reload()
+                    on_release: imageSaliency.reload()    
+                    on_release: self.saliency_image()
+                    on_release: display.save_canvas()
+
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint: 1.0,1.0
+                    Model00Button: 
+                        size_hint: 0.33,1.0
+                        id: model00
+                        on_release: modelText.set_txt_lbl( )
+                        on_release: classify.setModel( 0 )
+                        on_release: saliency.setModel( 0 )
+
+                    Model01Button: 
+                        size_hint: 0.33,1.0
+                        id: model01
+                        on_release: modelText.set_txt_lbl( )                        
+                        on_release: classify.setModel( 1 )
+                        on_release: saliency.setModel( 1 )      
+
+                    Model02Button: 
+                        size_hint: 0.33,1.0
+                        id: model02
+                        on_release: modelText.set_txt_lbl( )                        
+                        on_release: classify.setModel( 2 )
+                        on_release: saliency.setModel( 2 )
+                           
+                modelLabel:
+                    id: modelText
+                    text: "Default Model"
+                    font_size: 24
+                    color: 1.0,1.0,1.0,1.0 
+                    canvas.before:
+                        Color:
+                            rgba: 0.2,0.6,0.6,1.0 
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size         
 
         BoxLayout:
             orientation: "vertical"
-            size_hint: 1.0,1.0
-            BoxLayout:
-                orientation: "horizontal"
-                ClrButton:
-                    size_hint: 1.0,1.0
-                    on_release: display.clear_canvas()
-                ClrAllButton:
-                    size_hint: 1.0,1.0
-                    on_release: imageInput.reload()
-                    on_release: imageSaliency.reload() 
-                    on_release: outcomeGlyph.reload()
-                    on_release: imagePlt.reload()
-                    on_release: classify.clear_classify()
-                    on_release: display.clear_canvas()
-            
-            SaveButton:
-                size_hint: 1.0,1.0
-                on_release: display.save_canvas()
+            size_hint: 0.3,1.0              
+            canvas.before:
+                Color:
+                    rgba: 0.8,0.8,0.1,1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            Image:
+                id: outcomeGlyph
+                size_hint: 1.0,0.5
+                nocache: True 
+                source: 'currentGlyph.png'
+                allow_stretch: True
 
-            ClassifyButton: 
-                id: classify
-                size_hint: 1.0,1.0
-                #on_realease are Run in reverse order to declaration (obvs...)
-                on_release: outcomeGlyph.reload()
-                on_release: self.generateGlyph()
-                on_release: imagePlt.reload()
-                on_release: self.classify_image()
+            Image:
+                id: imagePlt
+                nocache: True 
+                size_hint: 1.0,0.5
+                source: 'classified.png'
+                allow_stretch: True        
 
-            SaliencyButton:
-                id: saliency
-                size_hint: 1.0,1.0
-                on_release: imageInput.reload()
-                on_release: imageSaliency.reload()    
-                on_release: self.saliency_image()
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: 0.3,1.0              
+            canvas.before:
+                Color:
+                    rgba: 0.1,0.8,0.1,1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            Image:
+                id: imageInput
+                nocache: True 
+                size_hint: 1.0,0.5
+                source: 'cnnInput.png'
+                allow_stretch: True             
 
-            BoxLayout:
-                orientation: "horizontal"
-                size_hint: 1.0,1.0
-                Model00Button: 
-                    size_hint: 0.33,1.0
-                    id: model00
-                    on_release: classify.setModel( 0 )
-                    on_release: saliency.setModel( 0 )
+            Image:
+                id: imageSaliency
+                nocache: True 
+                size_hint: 1.0,0.5
+                source: 'saliency.png'
+                allow_stretch: True
 
-                Model01Button: 
-                    size_hint: 0.33,1.0
-                    id: model01
-                    on_release: classify.setModel( 1 )
-                    on_release: saliency.setModel( 1 )      
-
-                Model02Button: 
-                    size_hint: 0.33,1.0
-                    id: model02
-                    on_release: classify.setModel( 2 )
-                    on_release: saliency.setModel( 2 )                
-
-    BoxLayout:
-        orientation: "vertical"
-        canvas.before:
-            Color:
-                rgba: 0.8,0.8,0.1,1
-            Rectangle:
-                size: self.size
-                pos: self.pos
-        Image:
-            id: outcomeGlyph
-            size_hint: 1.0,0.5
-            nocache: True 
-            source: 'currentGlyph.png'
-            allow_stretch: True
-
-        Image:
-            id: imagePlt
-            nocache: True 
-            size_hint: 1.0,0.5
-            source: 'classified.png'
-            allow_stretch: True        
-
-    BoxLayout:
-        orientation: "vertical"
-        canvas.before:
-            Color:
-                rgba: 0.1,0.8,0.1,1
-            Rectangle:
-                size: self.size
-                pos: self.pos
-        Image:
-            id: imageInput
-            nocache: True 
-            size_hint: 1.0,0.5
-            source: 'cnnInput.png'
-            allow_stretch: True             
-
-        Image:
-            id: imageSaliency
-            nocache: True 
-            size_hint: 1.0,0.5
-            source: 'saliency.png'
-            allow_stretch: True
-
-
-
+        BoxLayout:
+            orientation: "vertical" 
+            size_hint: 0.1,1.0
+            Label:
+                size_hint: 1.0,0.1
+                font_size: 24
+                text: "Human\nClassification"
+            HI_00_Button:
+                id: hi_00
+                size_hint: 1.0,0.1
+                on_release: self.print_me(0)
+            HI_01_Button:
+                id: hi_01
+                size_hint: 1.0,0.1
+                on_release: self.print_me(1)
+            HI_02_Button:
+                id: hi_02
+                size_hint: 1.0,0.1
+                on_release: self.print_me(2)
+            HI_03_Button:
+                id: hi_03
+                size_hint: 1.0,0.1
+                on_release: self.print_me(3)
+            HI_04_Button:
+                id: hi_04
+                size_hint: 1.0,0.1
+                on_release: self.print_me(4)
+            HI_05_Button:
+                id: hi_05
+                size_hint: 1.0,0.1
+                on_release: self.print_me(5)
+            HI_06_Button:
+                id: hi_06
+                size_hint: 1.0,0.1
+                on_release: self.print_me(6)
+            HI_07_Button:
+                id: hi_07
+                size_hint: 1.0,0.1
+                on_release: self.print_me(7)
+            HI_08_Button:
+                id: hi_08
+                size_hint: 1.0,0.1
+                on_release: self.print_me(8)
+            HI_09_Button:
+                id: hi_09
+                size_hint: 1.0,0.1
+                on_release: self.print_me(9)

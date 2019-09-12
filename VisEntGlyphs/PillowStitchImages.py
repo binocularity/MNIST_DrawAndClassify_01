@@ -1,3 +1,7 @@
+#
+# Create the glyphs with key from the raw Blender image files.
+#
+
 from PIL import Image, ImageFont, ImageDraw
 
 fileA = ".\VisEntGlyphs\A_crp.png"

@@ -1,3 +1,7 @@
+#
+# Test glyph creation for the outcome visual
+#
+
 from PIL import Image, ImageFont, ImageDraw
 
 filename = ".\VisEntGlyphs\A_crp.png"
