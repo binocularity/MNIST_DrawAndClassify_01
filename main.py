@@ -10,6 +10,11 @@
 #
 #
 
+### FHD displatys
+LINEWIDTH = 15
+### UHD(4K) displays
+#LINEWIDTH = 30
+
 #
 # Kivy
 #
@@ -133,7 +138,7 @@ class LabelDraw(Label):
         with self.canvas:
             Color(1, 1, 0)
             d = 30.
-            touch.ud['line'] = Line(points=(touch.x, touch.y),width = 15)
+            touch.ud['line'] = Line(points=(touch.x, touch.y),width = LINEWIDTH)
 
     def on_touch_move(self, touch):
         touch.ud['line'].points += [touch.x, touch.y]
